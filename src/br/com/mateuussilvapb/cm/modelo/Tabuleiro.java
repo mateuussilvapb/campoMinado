@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
+import br.com.mateuussilvapb.cm.excecao.ExplosaoException;
+
 public class Tabuleiro {
 
 	private int linhas;
@@ -23,10 +25,15 @@ public class Tabuleiro {
 	}
 	
 	public void abrirCampo(int linha, int coluna) {
-		campos.parallelStream()
-			.filter(c -> c.getLINHA() == linha && c.getCOLUNA() == coluna)
-			.findFirst()
-			.ifPresent(c -> c.abrir());;
+		try {
+			campos.parallelStream()
+				.filter(c -> c.getLINHA() == linha && c.getCOLUNA() == coluna)
+				.findFirst()
+				.ifPresent(c -> c.abrir());;
+		} catch (ExplosaoException e) {
+			campos.forEach(c -> c.setAberto(true));
+			throw e;
+		}
 	}
 	
 	public void alterarMarcacao(int linha, int coluna) {
@@ -62,9 +69,9 @@ public class Tabuleiro {
 		Predicate<Campo> minado = c -> c.isMinado();
 		
 		do {
-			minasArmadas = (int) campos.stream().filter(minado).count();
 			int aleatorio = (int) (Math.random() * campos.size());
 			campos.get(aleatorio).minar();
+			minasArmadas = (int) campos.stream().filter(minado).count();
 		} while (minasArmadas < minas);
 	}
 	
@@ -82,9 +89,17 @@ public class Tabuleiro {
 		 * Classe utilizada para realizar grandes concatenações de Strings de forma otimizada
 		 */
 		StringBuilder sb = new StringBuilder();
-		
+		sb.append("  ");
+		for (int c = 0; c < colunas; c++) {
+			sb.append(" ");
+			sb.append(c);
+			sb.append(" ");			
+		}
+		sb.append("\n");
 		int i = 0;
 		for (int linha = 0; linha < linhas; linha++) {
+			sb.append(linha);
+			sb.append(" ");
 			for (int coluna = 0; coluna < colunas; coluna++) {
 				sb.append(" ");
 				sb.append(campos.get(i));
